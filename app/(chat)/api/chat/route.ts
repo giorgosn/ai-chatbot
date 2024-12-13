@@ -35,7 +35,8 @@ type AllowedTools =
   | 'createDocument'
   | 'updateDocument'
   | 'requestSuggestions'
-  | 'getWeather';
+  | 'getWeather'
+  | 'askChatGPT';
 
 const blocksTools: AllowedTools[] = [
   'createDocument',
@@ -45,8 +46,9 @@ const blocksTools: AllowedTools[] = [
 
 const weatherTools: AllowedTools[] = ['getWeather'];
 
-const allTools: AllowedTools[] = [...blocksTools, ...weatherTools];
-
+// ... existing code ...
+const allTools: AllowedTools[] = [...blocksTools, ...weatherTools, 'askChatGPT'];
+// ... existing code ...
 export async function POST(request: Request) {
   const {
     id,
@@ -118,6 +120,34 @@ export async function POST(request: Request) {
           return weatherData;
         },
       },
+      askChatGPT: {
+        description: 'Ask ChatGPT a specific question about Dimocritos University, people that are working there, ask for ways the user can collaborate with their labs',
+        parameters: z.object({
+          query: z.string().describe('The question to ask ChatGPT a specific question about Dimocritos University, people that are working there, ask for ways the user can collaborate with their labs'),
+        }),
+        execute: async ({ query }) => {
+          // If query is not provided, use a default query
+              // Debugging log to check the query value
+          console.log('Query received:', query);
+          const finalQuery = query || "Tell me about Dimocritos University and what ways I can work with them";
+      
+          const response = await fetch(
+            'https://rkqcswwqgyvgepybolkr.supabase.co/functions/v1/ask-chatgpt',
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWNzd3dxZ3l2Z2VweWJvbGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI3OTM2MjMsImV4cCI6MjA0ODM2OTYyM30.Y4z7FrcH0li1_0xUflffZFmfC56sTj2K38mb_6nKqxc',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ query: finalQuery }),
+            }
+          );
+      
+          const data = await response.json();
+          return data;
+        },
+      },
+      
       createDocument: {
         description: 'Create a document for a writing activity',
         parameters: z.object({
